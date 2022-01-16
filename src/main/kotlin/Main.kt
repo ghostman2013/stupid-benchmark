@@ -1,5 +1,6 @@
-import data.dsl.DslDatabaseGateway
-import data.sql.SqlDatabaseGateway
+import data.exposed.dsl.ExposedDslGateway
+import data.hibernate.core.CoreHibernateGateway
+import data.jdbc.JdbcGateway
 import domain.entities.NewMessage
 import domain.entities.NewUser
 import domain.gateways.IDatabaseGateway
@@ -8,10 +9,16 @@ import kotlin.system.measureTimeMillis
 fun main(args: Array<String>) {
     println("Start")
     val url = args[0]
-    println("SQL")
-    run(SqlDatabaseGateway(url))
-    println("DSL")
-    run(DslDatabaseGateway(url))
+    println("--------")
+    println("JDBC")
+    run(JdbcGateway(url))
+    println("--------")
+    println("Exposed DSL")
+    run(ExposedDslGateway(url))
+    println("--------")
+    println("Hibernate Core")
+    run(CoreHibernateGateway(url))
+    println("--------")
     println("Finish")
 }
 

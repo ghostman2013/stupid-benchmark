@@ -18,6 +18,7 @@ dependencies {
     testImplementation(kotlin("test"))
     implementation("org.jetbrains.exposed:exposed-core:$exposedVersion")
     runtimeOnly("org.jetbrains.exposed:exposed-jdbc:$exposedVersion")
+    implementation("org.hibernate:hibernate-core:5.6.3.Final")
     implementation("org.postgresql:postgresql:42.3.1")
 }
 

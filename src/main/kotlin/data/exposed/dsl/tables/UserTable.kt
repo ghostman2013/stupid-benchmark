@@ -1,4 +1,4 @@
-package data.dsl.tables
+package data.exposed.dsl.tables
 
 import org.jetbrains.exposed.sql.Table
 

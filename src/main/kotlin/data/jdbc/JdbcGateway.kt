@@ -1,4 +1,4 @@
-package data.sql
+package data.jdbc
 
 import domain.entities.Message
 import domain.entities.NewMessage
@@ -8,11 +8,11 @@ import domain.gateways.IDatabaseGateway
 import java.sql.Connection
 import java.sql.DriverManager
 
-class SqlDatabaseGateway(private val url: String): IDatabaseGateway {
+class JdbcGateway(private val url: String): IDatabaseGateway {
     private lateinit var connection: Connection
 
     override fun connect() {
-       this.connection = DriverManager.getConnection(this.url)
+        this.connection = DriverManager.getConnection(url)
     }
 
     override fun disconnect() {
@@ -53,7 +53,7 @@ class SqlDatabaseGateway(private val url: String): IDatabaseGateway {
 
     override fun addUsers(newUsers: List<NewUser>): List<User> {
         val args = List(newUsers.size) { "(?,?)" }.joinToString(",")
-        val sql = "INSERT INTO users(name, email) VALUES $args RETURNING id, name, email"
+        val sql = "INSERT INTO users(name, email) VALUES $args RETURNING id"
         val statement = this.connection.prepareStatement(sql)
         var index = 1
         newUsers.forEach {
@@ -62,11 +62,13 @@ class SqlDatabaseGateway(private val url: String): IDatabaseGateway {
         }
         val rs = statement.executeQuery()
         val users = ArrayList<User>(newUsers.size)
+        index = 0
         while (rs.next()) {
+            val newUser = newUsers[index++]
             users.add(User(
                 id = rs.getInt(1),
-                name = rs.getString(2),
-                email = rs.getString(3),
+                name = newUser.name,
+                email = newUser.email,
             ))
         }
         rs.close()
@@ -76,14 +78,7 @@ class SqlDatabaseGateway(private val url: String): IDatabaseGateway {
 
     override fun addMessages(newMessages: List<NewMessage>): List<Message> {
         val args = List(newMessages.size) { "(?,?)" }.joinToString(",")
-        val sql = """
-            WITH msg_list AS (
-                INSERT INTO messages(msg, created_by) VALUES $args RETURNING id, msg, created_by
-            )
-            SELECT m.id, m.msg, m.created_by, u.id, u.name, u.email
-            FROM msg_list m
-            INNER JOIN users u on u.id = m.created_by
-            """
+        val sql = "INSERT INTO messages(msg, created_by) VALUES $args RETURNING id"
         val statement = this.connection.prepareStatement(sql)
         var index = 1
         newMessages.forEach {
@@ -92,15 +87,29 @@ class SqlDatabaseGateway(private val url: String): IDatabaseGateway {
         }
         val rs = statement.executeQuery()
         val messages = ArrayList<Message>(newMessages.size)
+        val creators = hashMapOf<Int, User>()
+        index = 0
         while (rs.next()) {
+            val newMessage = newMessages[index++]
+            var creator = creators[newMessage.createdBy]
+            if (creator == null) {
+                val stmt = this.connection.prepareStatement("SELECT id, name, email FROM users WHERE id = ?")
+                stmt.setInt(1, newMessage.createdBy)
+                val userRs = stmt.executeQuery()
+                userRs.next()
+                creator = User(
+                    id = userRs.getInt(1),
+                    name = userRs.getString(2),
+                    email = userRs.getString(3),
+                )
+                userRs.close()
+                stmt.close()
+                creators[creator.id] = creator
+            }
             messages.add(Message(
                 id = rs.getInt(1),
-                msg = rs.getString(2),
-                createdBy = User(
-                    id = rs.getInt(3),
-                    name = rs.getString(4),
-                    email = rs.getString(5),
-                ),
+                msg = newMessage.msg,
+                createdBy = creator,
             ))
         }
         rs.close()
