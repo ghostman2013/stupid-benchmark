@@ -12,4 +12,12 @@ queries might not have been written optimally enough.
 
 # Stupid results
 
+|                                                                  | JDBC  | Exposed DSL | Hibernate Core |
+|------------------------------------------------------------------|-------|-------------|----------------|
+| Insert users and return their IDs                                | 0,670 | 1,800       | 3,430          |
+| Select a user by ID                                              | 0,056 | 0,086       | 0,287          |
+| Insert messages and return their IDs with a linked user (author) | 0,290 | 0,880       | 2,780          |
+
 ![Results](chart.png)
+
+&ast; Exposed DSL returns all values, not just IDs.
