@@ -20,4 +20,6 @@ queries might not have been written optimally enough.
 
 ![Results](chart.png)
 
-&ast; Exposed DSL returns all values, not just IDs.
+&ast; Less is better
+
+&ast;&ast; Exposed DSL returns all values, not just IDs.
